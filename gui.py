@@ -11,6 +11,7 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 import numpy as np
 import pyvo
+import pandas as pd
 service = pyvo.dal.TAPService("http://archives.ia2.inaf.it/vo/tap/projects")
 response = service.run_sync("SELECT * from exomercat.exomercat",timeout=None)
 table=response.table
@@ -21,7 +22,7 @@ if len(catalog)>0:
             catalog[col]=catalog.apply(lambda row: str(row[col]).lstrip('b').strip("'").replace('"',''),axis=1)
           except:
               pass
-          
+
 for c in catalog.columns:
     try:
         catalog[c]=catalog[c].astype(float)
