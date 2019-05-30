@@ -17,6 +17,8 @@ To run, download the repository and redirect to it in a terminal. Install the de
 
 `pip install -r requirements.txt `
 
-Then type:
+Open a new terminal, then type:
 
 `python gui.py `
+
+And you're ready to go!
