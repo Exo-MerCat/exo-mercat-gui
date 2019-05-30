@@ -1,6 +1,6 @@
 # Exo-MerCat GUI
 
-The Graphical User Interface of Exo-MerCat.
+The Graphical User Interface of Exo-MerCat. It works with **Python 3**.
 
 Requirements (in requirements.txt):
 
@@ -12,13 +12,15 @@ Requirements (in requirements.txt):
 
 > numpy==1.14.3
 
+> pandas==0.23.0
+
 
 To run, download the repository and redirect to it in a terminal. Install the desired requirements:
 
-`pip install -r requirements.txt `
+`pip3 install -r requirements.txt `
 
 Open a new terminal, then type:
 
-`python gui.py `
+`python3 gui.py `
 
 And you're ready to go!
