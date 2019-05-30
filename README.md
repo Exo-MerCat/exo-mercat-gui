@@ -4,7 +4,7 @@ The Graphical User Interface of Exo-MerCat.
 
 Requirements (in requirements.txt):
 
->  pandas==0.23.0
+>  pyvo==0.9.2
 
 > matplotlib==2.2.2
 
