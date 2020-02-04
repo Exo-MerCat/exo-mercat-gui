@@ -11,10 +11,18 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 import numpy as np
 import pyvo
-import pandas as pd
+from guizero import CheckBox, App, PushButton,  info, error, \
+    Text, Window, Picture, ListBox, TextBox
+import matplotlib.pyplot as plt
+import time
+import os
+from matplotlib.lines import Line2D
+import fnmatch
+from PIL import Image
+
 service = pyvo.dal.TAPService("http://archives.ia2.inaf.it/vo/tap/projects")
 response = service.run_sync("SELECT * from exomercat.exomercat",timeout=None)
-table=response.table
+table=response.to_table()
 catalog=table.to_pandas()
 if len(catalog)>0:
         for col in catalog.columns:
@@ -29,8 +37,7 @@ for c in catalog.columns:
     except:
         pass
 catalog = catalog.replace('nan', np.nan)
-from guizero import CheckBox, App, PushButton,  info, error, \
-    Text, Window, Picture, ListBox, TextBox
+
 
 
 # %%% UTILITIES
@@ -45,8 +52,7 @@ def is_float(value):
 
 def write_update():
 
-    import matplotlib.pyplot as plt
-    import time
+
     note = plt.annotate(
         'LAST UPDATE ' + time.strftime('%d/%m/%Y'),
         xy=(0.7, 0.),
@@ -92,7 +98,6 @@ def reduce_catalog(
     folder,
     ):
 
-    import os
     if masscheck == 1 and msinicheck == 0:
         if is_float(massmin):
             catalog = catalog[catalog['mass'] >= float(massmin)]
@@ -140,9 +145,7 @@ def reduce_catalog(
 
 
 def plot(catalog, plots, histplots):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from matplotlib.lines import Line2D
+
 
     catalog['Colors'] = catalog['discovery_method'].replace({
         'Transit': 'green',
@@ -707,11 +710,12 @@ def stdplot():
 
         histplots = [
             ['a', 'Semi-major axis (AU)', 1, 1, 'hista.png'],
-            ['bestmass', r'Best Mass (M$_J$)', 1, 1, 'histm.png'],
+            ['mass', r'Mass (M$_J$)', 1, 1, 'histm.png'],
+            ['msini', r'Minimum Mass (M$_J$)', 1, 1, 'histmsini.png'],
             ['r', 'Radius (R$_J$)', 1, 1, 'histr.png'],
             ['p', 'Period (days)', 1, 1, 'histp.png'],
             ['e', r'Eccentricity', 0, 1, 'histe.png'],
-            ['i', 'Inclination(deg)', 0, 1, 'histi.png'],
+            ['i', 'Inclination (deg)', 0, 1, 'histi.png'],
             ]
 
         plot(catred, plots, histplots)
@@ -719,8 +723,7 @@ def stdplot():
 
 
 def show_plots():
-    import os
-    import fnmatch
+
     window = Window(app, title='Plots window', height=1000, width=1300,
                     layout='grid')
     i = 0
@@ -730,7 +733,7 @@ def show_plots():
         if fnmatch.fnmatch(entry, '[!h]*.png'):
 
             picture = Picture(window, image=folder.value + '/' + entry,
-                              grid=[i, j], width=300, height=250)
+                              grid=[i, j],width=300, height=200)
             i = i + 1
             if i % 4 == 0:
                 j = j + 1
@@ -740,7 +743,7 @@ def show_plots():
         if fnmatch.fnmatch(entry, 'h*.png'):
 
             picture = Picture(window, image=folder.value + '/' + entry,
-                              grid=[i, j], width=300, height=250)
+                              grid=[i, j],width=300, height=200)
             i = i + 1
             if i % 4 == 0:
                 j = j + 1
@@ -770,6 +773,9 @@ def confirm_settings(
     histm,
     histmx,
     histmy,
+    histmsini,
+    histmsinix,
+    histmsiniy,
     histr,
     histrx,
     histry,
@@ -869,8 +875,11 @@ def confirm_settings(
         histplots.append(['a', 'Semi-major axis (AU)', histax.value,
                          histay.value, 'hista.png'])
     if histm.value == 1:
-        histplots.append(['bestmass', r'Best Mass (M$_J$)', histmx.value,
+        histplots.append(['mass', r'Mass (M$_J$)', histmx.value,
                          histmy.value, 'histm.png'])
+    if histmsini.value == 1:
+        histplots.append(['msini', r'Minimum Mass (M$_J$)', histmsinix.value,
+                         histmsiniy.value, 'histmsini.png'])
     if histr.value == 1:
         histplots.append(['r', 'Radius (R$_J$)', histrx.value,
                          histry.value, 'histr.png'])
@@ -963,7 +972,7 @@ def advchoice(catred):
     histay = CheckBox(window2, text='logscale y', grid=[2, 5],
                       align='left')
     histay.value = 1
-    histm = CheckBox(window2, text='Histogram Best Mass', grid=[0, 6],
+    histm = CheckBox(window2, text='Histogram Mass', grid=[0, 6],
                      align='left')
     histm.value = 1
     histmx = CheckBox(window2, text='logscale x', grid=[1, 6],
@@ -972,34 +981,43 @@ def advchoice(catred):
     histmy = CheckBox(window2, text='logscale y', grid=[2, 6],
                       align='left')
     histmy.value = 1
-    histr = CheckBox(window2, text='Histogram Radius', grid=[0, 7],
+    histmsini = CheckBox(window2, text='Histogram Msini', grid=[0, 7],
+                     align='left')
+    histmsini.value = 1
+    histmsinix = CheckBox(window2, text='logscale x', grid=[1, 7],
+                      align='left')
+    histmsinix.value = 1
+    histmsiniy = CheckBox(window2, text='logscale y', grid=[2, 7],
+                      align='left')
+    histmsiniy.value = 1
+    histr = CheckBox(window2, text='Histogram Radius', grid=[0, 8],
                      align='left')
     histr.value = 1
-    histrx = CheckBox(window2, text='logscale x', grid=[1, 7],
+    histrx = CheckBox(window2, text='logscale x', grid=[1, 8],
                       align='left')
     histrx.value = 1
-    histry = CheckBox(window2, text='logscale y', grid=[2, 7],
+    histry = CheckBox(window2, text='logscale y', grid=[2, 8],
                       align='left')
     histry.value = 1
-    histp = CheckBox(window2, text='Histogram Period', grid=[0, 8],
+    histp = CheckBox(window2, text='Histogram Period', grid=[0, 9],
                      align='left')
     histp.value = 1
-    histpx = CheckBox(window2, text='logscale x', grid=[1, 8],
+    histpx = CheckBox(window2, text='logscale x', grid=[1, 9],
                       align='left')
     histpx.value = 1
-    histpy = CheckBox(window2, text='logscale y', grid=[2, 8],
+    histpy = CheckBox(window2, text='logscale y', grid=[2, 9],
                       align='left')
     histpy.value = 1
     histe = CheckBox(window2, text='Histogram Eccentricity', grid=[0,
-                     9], align='left')
+                     10], align='left')
     histe.value = 1
-    histey = CheckBox(window2, text='logscale y', grid=[2, 9],
+    histey = CheckBox(window2, text='logscale y', grid=[2, 10],
                       align='left')
     histey.value = 1
-    histi = CheckBox(window2, text='Histogram Period', grid=[0, 10],
+    histi = CheckBox(window2, text='Histogram Period', grid=[0, 11],
                      align='left')
     histi.value = 1
-    histiy = CheckBox(window2, text='logscale y', grid=[2, 10],
+    histiy = CheckBox(window2, text='logscale y', grid=[2, 11],
                       align='left')
     histiy.value = 1
     button = PushButton(window2, text='Ok', command=confirm_settings,
@@ -1026,6 +1044,9 @@ def advchoice(catred):
         histm,
         histmx,
         histmy,
+        histmsini,
+        histmsinix,
+        histmsiniy,
         histr,
         histrx,
         histry,
@@ -1041,7 +1062,7 @@ def advchoice(catred):
         mperr,
         esmaerr,
         meerr,
-        ], grid=[4, 11, 2, 1])
+        ], grid=[4, 13, 2, 1])
 
 
 def advplot():
@@ -1086,14 +1107,14 @@ text.width = 15
 text = Text(app, text='Unit', grid=[4, 0], align='left')
 text.width = 10
 text = Text(app, text='Mass ', grid=[1, 2], align='right')
-unit = Text(app, text='M$_J$', grid=[4, 2], align='left')
+unit = Text(app, text='M_J', grid=[4, 2], align='left')
 
 massmin = TextBox(app, text='', grid=[2, 2])
 massmax = TextBox(app, text='', grid=[3, 2])
 
 text = Text(app, text='Radius', grid=[1, 3], align='right')
 text.height = 2
-unit = Text(app, text='R$_J$', grid=[4, 3], align='left')
+unit = Text(app, text='R_J', grid=[4, 3], align='left')
 unit.height = 2
 radmin = TextBox(app, text='', grid=[2, 3])
 radmax = TextBox(app, text='', grid=[3, 3])
@@ -1143,7 +1164,8 @@ text = Text(app, text='Folder Name', grid=[0, 8, 2, 1], align='right')
 text.height = 2
 text.width = 15
 folder = TextBox(app, grid=[2, 8, 2, 1])
-import time
+
+
 folder.value = time.strftime('%Y%m%d') + '/'
 folder.width = 22
 
@@ -1170,9 +1192,9 @@ listbox = ListBox(
         'Other',
         ],
     multiselect=True,
-    grid=[9, 4, 2, 4],
-    width=15,
-    height=8,
+    grid=[7, 4, 4, 4],
+   # width=15,
+    #height=8,
     )
 listbox.value = [
     'Radial Velocity',
