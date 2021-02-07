@@ -4,7 +4,7 @@ The Graphical User Interface of Exo-MerCat. It works with **Python 3**.
 
 Requirements (in requirements.txt):
 
->  pyvo==0.9.2
+>  pyvo>=1.1
 
 > matplotlib>=2.2.2
 
